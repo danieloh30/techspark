@@ -3,10 +3,10 @@
     xmlns:camel="http://camel.apache.org/schema/spring"
     xmlns:cxf="http://camel.apache.org/schema/cxf"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="             http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd             http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd      http://camel.apache.org/schema/cxf http://camel.apache.org/schema/cxf/camel-cxf-spring.xsd">
-    <cxf:cxfEndpoint address="http://localhost:8080/soap-api/claim"
+    <cxf:cxfEndpoint address="http://myclaimdemo:8080/soap-api/claim"
         endpointName="ClaimServicePort" id="claimapply"
         serviceName="tns:ClaimService"
-        wsdlURL="http://localhost:8080/soap-api/claim?wsdl" xmlns:tns="http://demo.redhat.org/"/>
+        wsdlURL="http://myclaimdemo:8080/soap-api/claim?wsdl" xmlns:tns="http://demo.redhat.org/"/>
     <bean
         class="org.apache.camel.component.servlet.CamelHttpTransportServlet" id="camelHttpTransportServlet"/>
     <bean
