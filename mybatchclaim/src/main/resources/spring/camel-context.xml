@@ -16,7 +16,7 @@
                 <json library="Jackson"/>
             </marshal>
 			<log id="_log4" message="---  ${body}"/>
-            <to id="_to4" uri="http4://localhost:8088/poc/claim/apply" /> 
+            <to id="_to4" uri="http4://myclaimsoaptorest:8088/poc/claim/apply" /> 
         </route>
     </camelContext>
 </beans>
