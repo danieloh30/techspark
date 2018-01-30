@@ -10,7 +10,6 @@ metadata:
     version: "2.0"
   creationTimestamp: 2018-01-30T00:52:25Z
   name: myaccidentalert
-  namespace: lab
   resourceVersion: "2223151"
   selfLink: /apis/template.openshift.io/v1/namespaces/lab/templates/myaccidentalert
   uid: d6b522e5-0557-11e8-b376-0a1a25b893d2
