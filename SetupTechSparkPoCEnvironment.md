@@ -13,7 +13,6 @@ oc new-project techspark_YOUR_USER_ID --display-name="Tech Spark PoC" --descript
 Setup existing Red Dog application
 
 ```  
-oc new-app -f amq63-basic.json --param=MQ_USERNAME=admin --param=MQ_PASSWORD=admin
 oc new-app --template=amq63-basic --param=MQ_USERNAME=admin --param=MQ_PASSWORD=admin 
 
 oc create -f soap.yml
@@ -50,3 +49,50 @@ Sample Data:
 
 This is what your project will look like after setup. Good Luck and Have FUN!!
 ![PoC Environment](pic/setupenv.png)
+
+
+
+To install the rest of the component for the PoCs
+
+```  
+
+oc create -f singlealertapi.yml
+oc new-app myaccidentalert
+
+
+oc create -f batchalert.yml
+oc new-app  mybatchalert
+
+oc create -f claimsoaptorest.yml
+oc new-app myclaimsoaptorest
+
+oc create -f batchclaim.yml
+oc new-app mybatchclaim
+
+```
+
+To test the Single alert report
+```
+curl -X POST \
+  http://YOUR_OSE_PROJECT_HOST/accidentcenter/report \
+  -H 'accidentdate: date' \
+  -H 'cache-control: no-cache' \
+  -H 'contactname: contactName' \
+  -H 'description: description' \
+  -H 'email: email' \
+  -H 'phone: phone' \
+  -H 'postman-token: 8a5216b0-d6ba-8262-a8ed-5cdd0b32622a' \
+  -H 'type: 1'
+```
+
+
+To test the Claim SOAP to REST
+
+```
+curl -X POST \
+  http://myclaimsoaptorest-lab.apps.b3dd.openshift.opentlc.com/poc/claim/apply \
+  -H 'cache-control: no-cache' \
+  -H 'content-type: application/json' \
+  -H 'postman-token: 1831528d-02fe-9f2a-0e01-3c13c5f040e7' \
+  -d '{"applyItem":1,"claimDate":"'\''2018-01-23'\''","claimType":2,"contactPhone":"23458604","customerId":"'\''123456'\''","customerName":"'\''Christina'\''", "email":"'\''test@rh.com'\''","polno":"'\''A23456677'\''"}'
+```
