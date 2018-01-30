@@ -1,0 +1,256 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+labels:
+  template: myaccidentalert
+metadata:
+  annotations:
+    description: Single Alert API
+    iconClass: icon-jboss
+    tags: techspark,java,springboot,fis,jenkins
+    version: "2.0"
+  creationTimestamp: 2018-01-30T00:52:25Z
+  name: myaccidentalert
+  namespace: lab
+  resourceVersion: "2223151"
+  selfLink: /apis/template.openshift.io/v1/namespaces/lab/templates/myaccidentalert
+  uid: d6b522e5-0557-11e8-b376-0a1a25b893d2
+objects:
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    creationTimestamp: null
+    labels:
+      component: ${APP_NAME}
+      group: ${GROUP_LABEL}
+      project: ${APP_NAME}
+      provider: s2i
+      version: ${APP_VERSION}
+    name: ${APP_NAME}
+  spec: {}
+  status:
+    dockerImageRepository: ""
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    creationTimestamp: null
+    labels:
+      component: ${APP_NAME}
+      group: ${GROUP_LABEL}
+      project: ${APP_NAME}
+      provider: s2i
+      version: ${APP_VERSION}
+    name: ${APP_NAME}
+  spec:
+    output:
+      to:
+        kind: ImageStreamTag
+        name: ${APP_NAME}:latest
+    resources: {}
+    source:
+      contextDir: ${CONTEXT_DIR}
+      git:
+        ref: ${GIT_REF}
+        uri: ${GIT_REPO}
+      type: Git
+    strategy:
+      sourceStrategy:
+        env:
+        - name: BUILD_LOGLEVEL
+          value: "5"
+        - name: ARTIFACT_DIR
+          value: ${ARTIFACT_DIR}
+        - name: MAVEN_ARGS
+          value: ${MAVEN_ARGS}
+        - name: MAVEN_ARGS_APPEND
+          value: ${MAVEN_ARGS_APPEND}
+        - name: MAVEN_OPTS
+          value: ${MAVEN_OPTS}
+        forcePull: true
+        from:
+          kind: ImageStreamTag
+          name: fis-java-openshift:${BUILDER_VERSION}
+          namespace: ${IMAGE_STREAM_NAMESPACE}
+        incremental: true
+      type: Source
+    triggers:
+    - github:
+        secret: ${BUILD_SECRET}
+      type: GitHub
+    - generic:
+        secret: ${BUILD_SECRET}
+      type: Generic
+    - type: ConfigChange
+    - imageChange: {}
+      type: ImageChange
+  status:
+    lastVersion: 0
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    creationTimestamp: null
+    labels:
+      component: ${APP_NAME}
+      group: ${GROUP_LABEL}
+      project: ${APP_NAME}
+      provider: s2i
+      version: ${APP_VERSION}
+    name: ${APP_NAME}
+  spec:
+    replicas: 1
+    selector:
+      component: ${APP_NAME}
+      deploymentconfig: ${APP_NAME}
+      group: ${GROUP_LABEL}
+      project: ${APP_NAME}
+      provider: s2i
+      version: ${APP_VERSION}
+    strategy:
+      resources: {}
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          component: ${APP_NAME}
+          deploymentconfig: ${APP_NAME}
+          group: ${GROUP_LABEL}
+          project: ${APP_NAME}
+          provider: s2i
+          version: ${APP_VERSION}
+      spec:
+        containers:
+        - env:
+          - name: KUBERNETES_NAMESPACE
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+          - name: ACTIVEMQ_SERVICE_HOST
+            value: broker-amq-tcp
+          image: library/${APP_NAME}:latest
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8081
+            initialDelaySeconds: 180
+          name: ${APP_NAME}
+          ports:
+          - containerPort: 8778
+            name: jolokia
+          - containerPort: 8080
+            name: tcp
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8081
+            initialDelaySeconds: 10
+          resources: {}
+    triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - ${APP_NAME}
+        from:
+          kind: ImageStreamTag
+          name: ${APP_NAME}:latest
+      type: ImageChange
+  status: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    creationTimestamp: null
+    labels:
+      component: ${APP_NAME}
+      group: ${GROUP_LABEL}
+      project: ${APP_NAME}
+      provider: s2i
+      version: ${APP_VERSION}
+    name: ${APP_NAME}
+  spec:
+    ports:
+    - name: tcp
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+    selector:
+      component: ${APP_NAME}
+      deploymentconfig: ${APP_NAME}
+      group: ${GROUP_LABEL}
+      project: ${APP_NAME}
+      provider: s2i
+      version: ${APP_VERSION}
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Route
+  metadata:
+    creationTimestamp: null
+    labels:
+      component: ${APP_NAME}
+      group: ${GROUP_LABEL}
+      project: ${APP_NAME}
+      provider: s2i
+      version: ${APP_VERSION}
+    name: ${APP_NAME}
+  spec:
+    port:
+      targetPort: 8080
+    to:
+      kind: Service
+      name: ${APP_NAME}
+  status: {}
+parameters:
+- description: The name assigned to the application.
+  displayName: Application Name
+  name: APP_NAME
+  required: true
+  value: myaccidentalert
+- description: The URL of the repository with your application source code.
+  displayName: Git Repository URL
+  name: GIT_REPO
+  required: true
+  value: https://github.com/weimeilin79/techspark.git
+- description: Path within Git project to build; empty for root project directory.
+  name: CONTEXT_DIR
+  value: /myaccidentalert
+- description: Set this to a branch name, tag or other ref of your repository if you
+    are not using the default branch.
+  displayName: Git Reference
+  name: GIT_REF
+  value: master
+- description: The version of the FIS S2I builder image to use.
+  displayName: Builder version
+  name: BUILDER_VERSION
+  value: "2.0"
+- description: The application version.
+  displayName: Application Version
+  name: APP_VERSION
+  value: 0.0.1
+- description: Arguments passed to mvn in the build.
+  displayName: Maven Arguments
+  name: MAVEN_ARGS
+  value: package -DskipTests -Dfabric8.skip -e -B
+- description: Extra arguments passed to mvn, e.g. for multi-module builds.
+  displayName: Extra Maven Arguments
+  name: MAVEN_ARGS_APPEND
+- description: Directory of the artifact to be built, e.g. for multi-module builds.
+  displayName: Maven build directory
+  name: ARTIFACT_DIR
+- description: maven options such as heapspace
+  name: MAVEN_OPTS
+  value: -Xmx1024m
+- description: Namespace in which the Fuse ImageStreams are installed. These ImageStreams
+    are normally installed in the openshift namespace. You should only need to modify
+    this if you've installed the ImageStreams in a different namespace/project.
+  displayName: Image Stream Namespace
+  name: IMAGE_STREAM_NAMESPACE
+  value: openshift
+- description: The secret needed to trigger a build.
+  displayName: Git Build Secret
+  from: '[a-zA-Z0-9]{40}'
+  generate: expression
+  name: BUILD_SECRET
+- name: GROUP_LABEL
+  value: fissvc
