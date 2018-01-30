@@ -90,7 +90,7 @@ To test the Claim SOAP to REST
 
 ```
 curl -X POST \
-  http://myclaimsoaptorest-lab.apps.b3dd.openshift.opentlc.com/poc/claim/apply \
+  http://YOUR_OSE_PROJECT_HOSTpoc/claim/apply \
   -H 'cache-control: no-cache' \
   -H 'content-type: application/json' \
   -H 'postman-token: 1831528d-02fe-9f2a-0e01-3c13c5f040e7' \
